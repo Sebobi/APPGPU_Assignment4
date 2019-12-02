@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
   //So, you'll want to have nx_glob be twice as large as nz_glob
   nx_glob = 400;      //Number of total cells in the x-dirction
   nz_glob = 200;      //Number of total cells in the z-dirction
-  sim_time = 1500;     //How many seconds to run the simulation
+  sim_time = 150;     //How many seconds to run the simulation
   output_freq = 10;   //How frequently to output data to file (in seconds)
   //Model setup: DATA_SPEC_THERMAL or DATA_SPEC_COLLISION
   data_spec_int = DATA_SPEC_INJECTION;
@@ -213,8 +213,14 @@ void semi_discrete_step( double *state_init , double *state_forcing , double *st
   }
 
   //Apply the tendencies to the fluid state
+  
+
+#pragma acc parallel loop collapse(3) private(inds,indt) \
+copy(state_out[0:((nx+2*hs)*(nz+2*hs)*NUM_VARS)], state_init[0:((nx+2*hs)*(nz+2*hs)*NUM_VARS)],tend[0:nx*nz*NUM_VARS])                        
   for (ll=0; ll<NUM_VARS; ll++) {
+    
     for (k=0; k<nz; k++) {
+
       for (i=0; i<nx; i++) {
         inds = ll*(nz+2*hs)*(nx+2*hs) + (k+hs)*(nx+2*hs) + i+hs;
         indt = ll*nz*nx + k*nx + i;
@@ -235,6 +241,9 @@ void compute_tendencies_x( double *state , double *flux , double *tend ) {
   //Compute the hyperviscosity coeficient
   hv_coef = -hv_beta * dx / (16*dt);
   //Compute fluxes in the x-direction for each cell
+#pragma acc parallel loop collapse(2) private(ll,s,inds,stencil,vals,d3_vals,t,p,r,u,w) \
+copy(state[0:((nx+2*hs)*(nz+2*hs)*NUM_VARS)], flux[0:((nx+1)*(nz+1)*NUM_VARS)],hy_dens_theta_cell[0:(nz+2*hs)])
+
   for (k=0; k<nz; k++) {
     for (i=0; i<nx+1; i++) {
       //Use fourth-order interpolation from four cell averages to compute the value at the interface in question
@@ -264,6 +273,10 @@ void compute_tendencies_x( double *state , double *flux , double *tend ) {
     }
   }
 
+
+
+#pragma acc parallel loop collapse(3) private(indt,indf1,indf2) \
+copy(tend[0:nx*nz*NUM_VARS],flux[0:((nx+1)*(nz+1)*NUM_VARS)])
   //Use the fluxes to compute tendencies for each cell
   for (ll=0; ll<NUM_VARS; ll++) {
     for (k=0; k<nz; k++) {
