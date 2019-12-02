@@ -13,6 +13,10 @@
 #include <mpi.h>
 #include "pnetcdf.h"
 
+
+
+
+
 const double pi        = 3.14159265358979323846264338327;   //Pi
 const double grav      = 9.8;                               //Gravitational acceleration (m / s^2)
 const double cp        = 1004.;                             //Specific heat of dry air at constant pressure
@@ -110,6 +114,14 @@ void   compute_tendencies_x ( double *state , double *flux , double *tend );
 void   compute_tendencies_z ( double *state , double *flux , double *tend );
 void   set_halo_values_x    ( double *state );
 void   set_halo_values_z    ( double *state );
+
+
+#define state_size ((nx+2*hs)*(nz+2*hs)*NUM_VARS)
+#define flux_size (nx+1)*(nz+1)*NUM_VARS
+#define tend_size nx*nz*NUM_VARS
+#define hy_cell_size nz+2*hs
+#define hy_int_size nz+1
+#define  buffer_size hs*nz*NUM_VARS
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +228,8 @@ void semi_discrete_step( double *state_init , double *state_forcing , double *st
   
 
 #pragma acc parallel loop collapse(3) private(inds,indt) \
-copy(state_out[0:((nx+2*hs)*(nz+2*hs)*NUM_VARS)], state_init[0:((nx+2*hs)*(nz+2*hs)*NUM_VARS)],tend[0:nx*nz*NUM_VARS])                        
+copy(state_out[0:state_size], state_init[0:state_size],tend[0:tend_size])
+//copy(state_out[0:((nx+2*hs)*(nz+2*hs)*NUM_VARS)],state_init[0:((nx+2*hs)*(nz+2*hs)*NUM_VARS)],tend[0:nx*nz*NUM_VARS])                                                
   for (ll=0; ll<NUM_VARS; ll++) {
     
     for (k=0; k<nz; k++) {
@@ -242,7 +255,8 @@ void compute_tendencies_x( double *state , double *flux , double *tend ) {
   hv_coef = -hv_beta * dx / (16*dt);
   //Compute fluxes in the x-direction for each cell
 #pragma acc parallel loop collapse(2) private(ll,s,inds,stencil,vals,d3_vals,t,p,r,u,w) \
-copy(state[0:((nx+2*hs)*(nz+2*hs)*NUM_VARS)], flux[0:((nx+1)*(nz+1)*NUM_VARS)],hy_dens_theta_cell[0:(nz+2*hs)])
+copy(state[0:state_size],flux[0:flux_size],hy_dens_theta_cell[0:hy_cell_size])
+//copy(state[0:((nx+2*hs)*(nz+2*hs)*NUM_VARS)], flux[0:((nx+1)*(nz+1)*NUM_VARS)],hy_dens_theta_cell[0:(nz+2*hs)])
 
   for (k=0; k<nz; k++) {
     for (i=0; i<nx+1; i++) {
@@ -276,7 +290,8 @@ copy(state[0:((nx+2*hs)*(nz+2*hs)*NUM_VARS)], flux[0:((nx+1)*(nz+1)*NUM_VARS)],h
 
 
 #pragma acc parallel loop collapse(3) private(indt,indf1,indf2) \
-copy(tend[0:nx*nz*NUM_VARS],flux[0:((nx+1)*(nz+1)*NUM_VARS)])
+copy(tend[0:tend_size],flux[0:flux_size])
+//copy(tend[0:nx*nz*NUM_VARS],flux[0:((nx+1)*(nz+1)*NUM_VARS)])
   //Use the fluxes to compute tendencies for each cell
   for (ll=0; ll<NUM_VARS; ll++) {
     for (k=0; k<nz; k++) {
