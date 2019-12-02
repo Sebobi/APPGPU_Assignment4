@@ -1,0 +1,37 @@
+==35176== NVPROF is profiling process 35176, command: ./bin/miniWeather
+==35176== Profiling application: ./bin/miniWeather
+==35176== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   30.23%  21.0114s     79200  265.30us     927ns  486.92us  [CUDA memcpy HtoD]
+                   28.23%  19.6227s     73800  265.89us  1.1510us  460.52us  [CUDA memcpy DtoH]
+                   16.12%  11.2029s      2700  4.1492ms  3.9199ms  4.3254ms  compute_tendencies_z(double*, double*, double*)_322_gpu
+                   15.36%  10.6742s      2700  3.9534ms  3.7047ms  4.1413ms  compute_tendencies_x(double*, double*, double*)_261_gpu
+                    3.36%  2.33583s      2700  865.12us  857.14us  990.32us  compute_tendencies_z(double*, double*, double*)_355_gpu
+                    3.29%  2.28621s      2700  846.75us  814.23us  1.0844ms  compute_tendencies_x(double*, double*, double*)_296_gpu
+                    3.26%  2.26387s      5400  419.23us  417.10us  421.39us  semi_discrete_step(double*, double*, double*, double, int, double*, double*)_233_gpu
+                    0.05%  34.085ms      2700  12.623us  11.327us  13.568us  set_halo_values_x(double*)_385_gpu
+                    0.04%  27.611ms      2700  10.226us  9.3120us  11.168us  set_halo_values_z(double*)_446_gpu
+                    0.03%  24.150ms      2700  8.9440us  7.6800us  9.5040us  set_halo_values_x(double*)_405_gpu
+                    0.03%  21.534ms      2700  7.9750us  7.3920us  8.6070us  set_halo_values_x(double*)_421_gpu
+      API calls:   95.14%  61.4662s     86400  711.41us  1.1590us  4.3363ms  cuStreamSynchronize
+                    2.53%  1.63274s     90296  18.082us     340ns  859.19us  cuEventSynchronize
+                    0.81%  524.66ms     79200  6.6240us  3.2000us  22.036ms  cuMemcpyHtoDAsync
+                    0.58%  373.39ms     73800  5.0590us  2.9900us  467.03us  cuMemcpyDtoHAsync
+                    0.49%  319.64ms     27000  11.838us  8.9320us  554.99us  cuLaunchKernel
+                    0.26%  165.71ms     90298  1.8350us  1.1740us  454.15us  cuEventRecord
+                    0.14%  88.791ms         1  88.791ms  88.791ms  88.791ms  cuCtxCreate
+                    0.05%  30.990ms         1  30.990ms  30.990ms  30.990ms  cuMemHostAlloc
+                    0.00%  2.8131ms        14  200.94us  4.7990us  523.52us  cuMemAlloc
+                    0.00%  1.1491ms         1  1.1491ms  1.1491ms  1.1491ms  cuModuleLoadData
+                    0.00%  719.74us         1  719.74us  719.74us  719.74us  cuMemAllocHost
+                    0.00%  18.303us         1  18.303us  18.303us  18.303us  cuStreamCreate
+                    0.00%  16.100us         7  2.3000us     715ns  3.1690us  cuEventCreate
+                    0.00%  8.6520us         1  8.6520us  8.6520us  8.6520us  cuDeviceGetPCIBusId
+                    0.00%  8.5580us         9     950ns     263ns  4.7000us  cuModuleGetFunction
+                    0.00%  5.3030us         3  1.7670us     436ns  4.3340us  cuDeviceGetAttribute
+                    0.00%  3.5140us         3  1.1710us     300ns  1.6140us  cuDeviceGetCount
+                    0.00%  2.4420us         1  2.4420us  2.4420us  2.4420us  cuCtxAttach
+                    0.00%  2.4310us         2  1.2150us     566ns  1.8650us  cuDeviceGet
+                    0.00%     873ns         2     436ns     255ns     618ns  cuCtxGetCurrent
+                    0.00%     789ns         1     789ns     789ns     789ns  cuCtxSetCurrent
+                    0.00%     694ns         1     694ns     694ns     694ns  cuDeviceComputeCapability
