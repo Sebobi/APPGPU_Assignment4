@@ -316,6 +316,9 @@ void compute_tendencies_z( double *state , double *flux , double *tend ) {
   //Compute the hyperviscosity coeficient
   hv_coef = -hv_beta * dx / (16*dt);
   //Compute fluxes in the x-direction for each cell
+#pragma acc parallel loop collapse(2) private(ll,s,inds,stencil,vals,d3_vals,r,u,w,t,p) \
+copy(state[0:state_size],flux[0:flux_size],hy_dens_int[0:hy_int_size],hy_dens_theta_int[0:hy_int_size])
+
   for (k=0; k<nz+1; k++) {
     for (i=0; i<nx; i++) {
       //Use fourth-order interpolation from four cell averages to compute the value at the interface in question
@@ -345,6 +348,9 @@ void compute_tendencies_z( double *state , double *flux , double *tend ) {
     }
   }
 
+
+#pragma acc parallel loop collapse(3) private(indt,indf1,indf2) \
+copy(state[0:state_size],tend[0:tend_size],flux[0:flux_size])
   //Use the fluxes to compute tendencies for each cell
   for (ll=0; ll<NUM_VARS; ll++) {
     for (k=0; k<nz; k++) {
@@ -373,6 +379,8 @@ void set_halo_values_x( double *state ) {
   ierr = MPI_Irecv(recvbuf_l,hs*nz*NUM_VARS,MPI_DOUBLE, left_rank,0,MPI_COMM_WORLD,&req_r[0]);
   ierr = MPI_Irecv(recvbuf_r,hs*nz*NUM_VARS,MPI_DOUBLE,right_rank,1,MPI_COMM_WORLD,&req_r[1]);
 
+
+#pragma acc parallel loop collapse(3) copy(state[0:state_size],sendbuf_r[0:buffer_size],sendbuf_l[0:buffer_size])
   //Pack the send buffers
   for (ll=0; ll<NUM_VARS; ll++) {
     for (k=0; k<nz; k++) {
@@ -393,6 +401,7 @@ void set_halo_values_x( double *state ) {
 
 
   //Unpack the receive buffers
+#pragma acc parallel loop collapse(3) copy(state[0:state_size],recvbuf_l[0:buffer_size],recvbuf_r[0:buffer_size])
   for (ll=0; ll<NUM_VARS; ll++) {
     for (k=0; k<nz; k++) {
       for (s=0; s<hs; s++) {
@@ -407,6 +416,8 @@ void set_halo_values_x( double *state ) {
 
   if (data_spec_int == DATA_SPEC_INJECTION) {
     if (myrank == 0) {
+#pragma acc parallel loop collapse(2) private(ind_r,ind_u,ind_t) \
+copy(state[0:state_size],hy_dens_cell[0:hy_cell_size],hy_dens_theta_cell[0:hy_cell_size])
       for (k=0; k<nz; k++) {
         for (i=0; i<hs; i++) {
           z = (k_beg + k+0.5)*dz;
@@ -430,6 +441,8 @@ void set_halo_values_z( double *state ) {
   int          i, ll;
   const double mnt_width = xlen/8;
   double       x, xloc, mnt_deriv;
+#pragma acc parallel loop collapse(2) private(x,xloc,mnt_deriv) \
+copy(state[0:state_size])
   for (ll=0; ll<NUM_VARS; ll++) {
     for (i=0; i<nx+2*hs; i++) {
       if (ll == ID_WMOM) {
